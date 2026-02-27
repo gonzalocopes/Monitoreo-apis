@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DIRECT_URL")
+}
+
+model Endpoint {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  name        String
+  url         String
+  method      String      @default("GET")
+  interval    Int         @default(5) // in minutes
+  status      String      @default("PENDING") // PENDING, ONLINE, OFFLINE
+  lastChecked DateTime?
+  createdAt   DateTime    @default(now())
+  logs        CheckLog[]
+  incidents   Incident[]
+}
+
+model CheckLog {
+  id           Int      @id @default(autoincrement())
+  endpointId   Int
+  statusCode   Int?
+  responseTime Int?     // in ms
+  createdAt    DateTime @default(now())
+  endpoint     Endpoint @relation(fields: [endpointId], references: [id])
+}
+
+model Incident {
+  id          Int       @id @default(autoincrement())
+  endpointId  Int
+  status      String    // ONLINE, OFFLINE
+  description String?
+  startedAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  endpoint    Endpoint  @relation(fields: [endpointId], references: [id])
+}
